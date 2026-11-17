@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://petite-maison.example/schemas/events/product-viewed.schema.json",
+  "title": "product-viewed",
+  "description": "Published by catalog-service on topic catalog.product-viewed (3 partitions) each time a product page is served. Kafka key = user_id when authenticated, otherwise session_id. Kafka headers: event_type, correlation_id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_id", "event_type", "occurred_at", "user_id", "session_id", "product_id", "category", "universe", "source"],
+  "properties": {
+    "event_id": {
+      "description": "Unique event identifier (idempotency key for consumers).",
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_type": {
+      "type": "string",
+      "const": "product.viewed"
+    },
+    "occurred_at": {
+      "description": "UTC instant, ISO-8601.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "user_id": {
+      "description": "Keycloak subject (JWT sub) or null for anonymous visitors.",
+      "type": ["string", "null"],
+      "maxLength": 64
+    },
+    "session_id": {
+      "description": "Browser session identifier (X-Session-Id header, or generated 'anon-<uuid>').",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9-]{8,64}$"
+    },
+    "product_id": {
+      "description": "Product slug.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["FIGURINE", "BLURAY", "BD", "BOARD_GAME", "GOODIES", "FANZINE"]
+    },
+    "universe": {
+      "description": "Free-form universe tag (slasher, giallo, gothique, heroic-fantasy, lovecraftien, folk-horror, zombie...).",
+      "type": "string",
+      "maxLength": 64
+    },
+    "source": {
+      "type": "string",
+      "enum": ["product_page"]
+    }
+  },
+  "examples": [
+    {
+      "event_id": "4c321214-b8f9-4de7-a11b-cce252ccf66a",
+      "event_type": "product.viewed",
+      "occurred_at": "2026-11-17T13:51:09.014Z",
+      "user_id": null,
+      "session_id": "session-demo-0002",
+      "product_id": "bluray-suspiria-4k",
+      "category": "BLURAY",
+      "universe": "giallo",
+      "source": "product_page"
+    }
+  ]
+}
