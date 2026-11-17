@@ -11,3 +11,22 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+
+  - package-ecosystem: maven
+    directory: /services/catalog-service
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      spring:
+        patterns: ["org.springframework*"]
+
+  - package-ecosystem: docker
+    directory: /services/catalog-service
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope

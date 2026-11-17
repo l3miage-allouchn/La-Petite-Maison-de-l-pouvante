@@ -4,6 +4,10 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 MODE ?= compose
+# Java 25 LTS (Homebrew's default openjdk may be newer and non-LTS)
+# (`java_home -v 25` silently returns a newer JDK when 25 is not registered, so check the brew path first.)
+BREW_JDK25  := /opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home
+JAVA25_HOME ?= $(if $(wildcard $(BREW_JDK25)),$(BREW_JDK25),$(JAVA_HOME))
 COMPOSE       := docker compose --env-file .env
 COMPOSE_INFRA := $(COMPOSE) -f docker-compose.infra.yml
 COMPOSE_ALL   := $(COMPOSE) -f docker-compose.yml
@@ -12,7 +16,7 @@ define todo
 	@echo "⏳ '$@' : à venir en $(1)."
 endef
 
-.PHONY: help env bootstrap check-env infra infra-down status logs kafka-demo-event dev dev-down dev-reset test \
+.PHONY: help env bootstrap check-env infra infra-down status logs kafka-demo-event test-catalog dev dev-down dev-reset test \
         cluster platform secrets up down demo-broker
 
 help: ## Affiche cette aide
@@ -55,8 +59,10 @@ logs: ## Suit les logs (S=service pour filtrer)
 kafka-demo-event: ## Publie un événement product-viewed de test dans Kafka
 	@./infra/local/kafka/produce-demo-event.sh
 
-test: ## Lance les tests de tous les services
-	$(call todo,phases 2 à 4)
+test: test-catalog ## Lance les tests de tous les services
+
+test-catalog: ## catalog-service : tests unitaires + intégration (Testcontainers) + couverture
+	cd services/catalog-service && JAVA_HOME=$(JAVA25_HOME) ./mvnw -B verify
 
 # ---------- Partie B : Kubernetes ----------
 cluster: ## Crée le cluster Kind
