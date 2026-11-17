@@ -4,7 +4,7 @@
 FROM ghcr.io/astral-sh/uv:0.13.8 AS uv
 
 # ---------- build ----------
-FROM python:3.14.9-slim-trixie AS build
+FROM python:3.15.2-slim-trixie AS build
 COPY --from=uv /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
@@ -17,7 +17,7 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-ins
 COPY app/ app/
 
 # ---------- runtime ----------
-FROM python:3.14.9-slim-trixie
+FROM python:3.15.2-slim-trixie
 
 LABEL org.opencontainers.image.title="reco-service" \
       org.opencontainers.image.description="La Petite Maison de l'Épouvante - recommendations" \
