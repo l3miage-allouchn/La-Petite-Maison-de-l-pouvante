@@ -1,0 +1,12 @@
+# Inside the Compose network (pme-net): service names instead of localhost.
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:catalog}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:19092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8080/realms/petite-maison}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://keycloak:8080/realms/petite-maison/protocol/openid-connect/certs}

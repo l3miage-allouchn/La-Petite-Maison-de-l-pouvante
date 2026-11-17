@@ -1,0 +1,10 @@
+# Run from the IDE / `./mvnw spring-boot:run` against `make infra` (host ports from .env).
+server:
+  port: ${SERVER_PORT:8081}
+
+logging:
+  structured:
+    format:
+      console: ""     # human-readable logs on a developer terminal
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{correlation_id:-}] %logger{36} - %msg%n"
