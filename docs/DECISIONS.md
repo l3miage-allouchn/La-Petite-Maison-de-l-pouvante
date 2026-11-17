@@ -34,7 +34,28 @@ Format court : contexte → décision → conséquences. Statuts : *proposé*, *
 
 ## ADR-005 — Résolution de l'issuer OIDC (Keycloak)
 
-- **Statut** : proposé (mis en œuvre en phases 1 et 6)
+- **Statut** : accepté pour Compose (phase 1, vérifié) ; volet Kubernetes en phase 6
 - **Contexte** : le navigateur et les conteneurs ne voient pas Keycloak à la même adresse (`localhost:8080` contre `keycloak:8080` ; `auth.localhost` pointe vers 127.0.0.1 dans un pod). L'issuer des JWT doit pourtant être unique.
 - **Décision** : en Compose, `KC_HOSTNAME` fixe l'issuer public, et les services valident cet issuer tout en récupérant les clés JWKS par l'URL interne. Sur Kind, une règle de réécriture CoreDNS envoie `auth.localhost` vers le service Traefik, et la CA locale est montée dans les pods.
 - **Conséquences** : la configuration des services sépare `issuer-uri` et `jwk-set-uri`.
+
+## ADR-006 — Création des topics Kafka par un conteneur `kafka-init`
+
+- **Statut** : accepté (phase 1)
+- **Contexte** : l'auto-création des topics est désactivée, pour maîtriser partitions et réplication. Les topics doivent exister avant que les services démarrent. Or `docker compose up --wait` échoue si un conteneur s'arrête, même avec le code 0.
+- **Décision** : un conteneur `kafka-init` (même image que Kafka) crée les topics de façon idempotente (`--if-not-exists`), écrit un fichier marqueur puis reste en veille. Son healthcheck vérifie ce marqueur.
+- **Conséquences** : les services pourront déclarer `depends_on: kafka-init: service_healthy`. Le coût est négligeable (environ 2 Mo de RAM). Sur Kubernetes, ce rôle reviendra aux ressources `KafkaTopic` de Strimzi.
+
+## ADR-007 — Client `dev-cli` (password grant), local uniquement
+
+- **Statut** : accepté (phase 1)
+- **Contexte** : il faut obtenir un JWT en ligne de commande pour tester les API (phases 2 et 3) avant que le frontend existe.
+- **Décision** : un client public `dev-cli`, limité au *Direct Access Grant*, dans le realm local. Le client `frontend`, lui, utilise exclusivement Authorization Code avec PKCE (S256).
+- **Conséquences** : le password grant est déconseillé (OAuth 2.1). Ce client sera supprimé du realm déployé sur Kubernetes.
+
+## ADR-008 — Ports liés à 127.0.0.1 et configurables
+
+- **Statut** : accepté (phase 1)
+- **Contexte** : les ports d'infrastructure (5432, 6379…) peuvent déjà être pris sur un poste, et Kafbat UI n'a pas d'authentification.
+- **Décision** : tous les ports publiés sont liés à `127.0.0.1`. Les ports côté hôte sont surchargeables dans `.env` (`*_HOST_PORT`). Les conteneurs communiquent par le réseau dédié `pme-net`.
+- **Conséquences** : rien n'est exposé sur le réseau local. Un conflit de port se règle sans toucher au code.

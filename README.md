@@ -35,17 +35,30 @@ Hors périmètre (maquettes uniquement) : panier, paiement, troc, chat, liseuse,
 
 Docker Desktop : allouer **au moins 8 Go de RAM** (10 à 11 Go pour la partie Kubernetes).
 
+> macOS : si `docker pull` échoue avec `docker-credential-desktop: executable file not found`,
+> ajouter `export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"` à `~/.zshrc`.
+
 ## Démarrage rapide
 
 ```bash
 git clone https://github.com/l3miage-allouchn/La-Petite-Maison-de-l-pouvante.git
 cd La-Petite-Maison-de-l-pouvante
-make bootstrap      # crée .env depuis .env.example + installe les hooks pre-commit
-# éditer .env et remplacer toutes les valeurs "change-me"
+make bootstrap      # génère .env (secrets aléatoires) + installe les hooks pre-commit
+make infra          # PostgreSQL, Kafka (+ topics), Valkey, Keycloak, Kafbat UI — attend que tout soit healthy
+make kafka-demo-event   # publie un événement de test, visible dans Kafbat UI
 make help           # liste des cibles
 ```
 
-Les cibles `make infra`, `make dev`, etc. seront opérationnelles au fil des phases.
+| Cible | Effet |
+|---|---|
+| `make infra` / `make infra-down` | Démarre / arrête l'infrastructure seule |
+| `make dev` / `make dev-down` | Démarre / arrête toute l'application |
+| `make dev-reset` | Arrête tout et **supprime les volumes** (realm réimporté, base vide) |
+| `make status`, `make logs S=keycloak` | État des conteneurs, logs |
+
+Tous les ports sont liés à `127.0.0.1` uniquement. Si un port est déjà pris sur votre machine,
+changez-le dans `.env` (`POSTGRES_HOST_PORT`, `VALKEY_HOST_PORT`, …) : les conteneurs, eux, communiquent
+par le réseau Docker `pme-net` et ne sont pas affectés.
 
 ## URLs (à partir de la phase 1)
 
@@ -59,14 +72,25 @@ Les cibles `make infra`, `make dev`, etc. seront opérationnelles au fil des pha
 | ArgoCD / Grafana | — | https://argocd.localhost / https://grafana.localhost |
 
 Comptes de test (realm `petite-maison`) : `nesrine` (rôle `client`) et `admin` (rôle `admin`).
-Les mots de passe sont définis dans votre `.env`.
+Les mots de passe sont dans votre `.env` (`grep KC_USER_ .env`).
+
+- Console de compte utilisateur : <http://localhost:8080/realms/petite-maison/account>
+- Console d'administration Keycloak : <http://localhost:8080/admin> (`KC_BOOTSTRAP_ADMIN_USERNAME` / `KC_BOOTSTRAP_ADMIN_PASSWORD`)
+- Jeton de test en ligne de commande (client `dev-cli`, **local uniquement**) :
+
+```bash
+set -a; . ./.env; set +a
+curl -s http://localhost:8080/realms/petite-maison/protocol/openid-connect/token \
+  -d grant_type=password -d client_id=dev-cli -d username=nesrine \
+  --data-urlencode "password=$KC_USER_NESRINE_PASSWORD" | jq -r .access_token
+```
 
 ## Feuille de route
 
 | Phase | Contenu | État |
 |---|---|---|
 | 0 | Initialisation, dépôt, pre-commit / Gitleaks | ✅ |
-| 1 | Infra locale Docker Compose (Postgres, Kafka, Valkey, Keycloak) | ⏳ |
+| 1 | Infra locale Docker Compose (Postgres, Kafka, Valkey, Keycloak) | ✅ |
 | 2 | catalog-service (Spring Boot) | ⏳ |
 | 3 | reco-service (FastAPI) | ⏳ |
 | 4 | Frontend (Next.js) | ⏳ |
