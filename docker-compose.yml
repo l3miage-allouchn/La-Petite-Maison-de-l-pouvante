@@ -1,0 +1,10 @@
+# Full local stack: infrastructure + application services.
+# Usage: make dev
+# Application services are added in phases 2 (catalog-service),
+# 3 (reco-service) and 4 (frontend).
+name: petite-maison
+
+include:
+  - docker-compose.infra.yml
+
+services: {}
