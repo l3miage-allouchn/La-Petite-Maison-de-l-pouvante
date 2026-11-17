@@ -1,0 +1,79 @@
+[project]
+name = "reco-service"
+version = "0.1.0"
+description = "La Petite Maison de l'Épouvante - recommendation service"
+requires-python = ">=3.14,<3.15"
+license = "MIT"
+dependencies = [
+    "fastapi>=0.163",
+    "uvicorn[standard]>=0.54",
+    "aiokafka>=0.15",
+    "valkey>=6.2",
+    "pyjwt[crypto]>=2.15",
+    "pydantic>=2.12",
+    "pydantic-settings>=2.16",
+    "prometheus-client>=0.26",
+    "python-json-logger>=4.2",
+    "httpx>=0.28",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2",
+    "pytest-asyncio>=1.5",
+    "pytest-cov>=7.1",
+    "testcontainers[kafka]>=4.15",
+    "ruff>=0.17",
+    "mypy>=2.4",
+]
+
+[tool.uv]
+package = false
+
+# ---------- tests ----------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+markers = ["integration: needs Docker (Testcontainers)"]
+addopts = "-ra --strict-markers"
+filterwarnings = [
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated:DeprecationWarning",
+    "ignore::DeprecationWarning:testcontainers.*",
+]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
+skip_covered = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "\\.\\.\\."]
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+# ---------- lint / types ----------
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "S", "ASYNC", "SIM", "RUF", "PT"]
+ignore = ["S101"]  # assert is fine in tests
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S311"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+packages = ["app"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["aiokafka.*", "testcontainers.*"]
+ignore_missing_imports = true
