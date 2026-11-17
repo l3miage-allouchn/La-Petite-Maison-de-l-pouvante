@@ -30,3 +30,19 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+
+  - package-ecosystem: uv
+    directory: /services/reco-service
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: docker
+    directory: /services/reco-service
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope

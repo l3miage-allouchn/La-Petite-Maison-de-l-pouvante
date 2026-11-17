@@ -16,7 +16,7 @@ define todo
 	@echo "⏳ '$@' : à venir en $(1)."
 endef
 
-.PHONY: help env bootstrap check-env infra infra-down status logs kafka-demo-event test-catalog dev dev-down dev-reset test \
+.PHONY: help env bootstrap check-env infra infra-down status logs kafka-demo-event test-catalog test-reco reco-offline reco-replay dev dev-down dev-reset test \
         cluster platform secrets up down demo-broker
 
 help: ## Affiche cette aide
@@ -59,10 +59,20 @@ logs: ## Suit les logs (S=service pour filtrer)
 kafka-demo-event: ## Publie un événement product-viewed de test dans Kafka
 	@./infra/local/kafka/produce-demo-event.sh
 
-test: test-catalog ## Lance les tests de tous les services
+test: test-catalog test-reco ## Lance les tests de tous les services
 
 test-catalog: ## catalog-service : tests unitaires + intégration (Testcontainers) + couverture
 	cd services/catalog-service && JAVA_HOME=$(JAVA25_HOME) ./mvnw -B verify
+
+test-reco: ## reco-service : ruff + mypy + pytest (unitaires + Testcontainers) + couverture
+	cd services/reco-service && uv run ruff check . && uv run ruff format --check . && uv run mypy \
+		&& uv run pytest --cov --cov-report=term --cov-report=xml
+
+reco-offline: ## Modèle de reco hors-ligne sur les événements de démo (ARGS="--evaluate")
+	cd services/reco-service && uv run python -m app.model.offline $(ARGS)
+
+reco-replay: check-env ## Rejoue tout l'historique Kafka pour reconstruire les profils de reco
+	@./scripts/reco-replay.sh
 
 # ---------- Partie B : Kubernetes ----------
 cluster: ## Crée le cluster Kind
