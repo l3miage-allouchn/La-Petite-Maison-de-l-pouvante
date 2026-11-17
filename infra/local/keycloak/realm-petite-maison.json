@@ -1,0 +1,119 @@
+{
+  "realm": "petite-maison",
+  "displayName": "La Petite Maison de l'Épouvante",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "resetPasswordAllowed": false,
+  "bruteForceProtected": true,
+  "failureFactor": 5,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["fr", "en"],
+  "defaultLocale": "fr",
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "roles": {
+    "realm": [
+      { "name": "client", "description": "Customer of the shop" },
+      { "name": "admin", "description": "Shop administrator" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "frontend",
+      "name": "Next.js storefront",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KC_FRONTEND_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "${KC_FRONTEND_URL}",
+      "baseUrl": "/",
+      "redirectUris": ["${KC_FRONTEND_URL}/api/auth/callback/keycloak"],
+      "webOrigins": ["${KC_FRONTEND_URL}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${KC_FRONTEND_URL}/*"
+      },
+      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "basic", "email"],
+      "optionalClientScopes": ["offline_access"],
+      "protocolMappers": [
+        {
+          "name": "audience-catalog-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "catalog-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "catalog-api",
+      "name": "Backend APIs (resource server audience)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "bearerOnly": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    },
+    {
+      "clientId": "dev-cli",
+      "name": "LOCAL DEV ONLY - token for curl tests",
+      "description": "Public client with password grant, used only to obtain test tokens from the command line. Disabled on Kubernetes.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "audience-catalog-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "catalog-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "nesrine",
+      "email": "nesrine@petite-maison.example",
+      "firstName": "Nesrine",
+      "lastName": "Test",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": ["default-roles-petite-maison", "client"],
+      "credentials": [
+        { "type": "password", "value": "${KC_USER_NESRINE_PASSWORD}", "temporary": false }
+      ]
+    },
+    {
+      "username": "admin",
+      "email": "admin@petite-maison.example",
+      "firstName": "Admin",
+      "lastName": "Test",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": ["default-roles-petite-maison", "admin"],
+      "credentials": [
+        { "type": "password", "value": "${KC_USER_ADMIN_PASSWORD}", "temporary": false }
+      ]
+    }
+  ]
+}
