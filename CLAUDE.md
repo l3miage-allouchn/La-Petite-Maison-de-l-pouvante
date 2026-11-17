@@ -16,6 +16,7 @@ Dépôt : https://github.com/l3miage-allouchn/La-Petite-Maison-de-l-pouvante (pu
 ## Conventions
 - Code, identifiants, commits : **anglais**. Docs (README, docs/) : **français**.
 - Commits : Conventional Commits (`feat:`, `fix:`, `ci:`, `chore:`, `docs:`, `test:`), petits et fréquents.
+  Aucune mention de Claude (pas de trailer `Co-Authored-By`, pas de « Generated with Claude Code » dans les PR).
 - Images de base officielles avec tag précis, jamais `latest`. Conteneurs **non root**.
 - GitHub Actions épinglées par **SHA complet** + version en commentaire.
 - Interdits : Helm/images Bitnami, ingress-nginx, Secret K8s commité, conteneurs root.
