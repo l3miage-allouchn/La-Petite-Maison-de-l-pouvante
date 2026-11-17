@@ -2,7 +2,7 @@
 # Multi-stage build: JDK to build, minimal JRE (Alpine) to run, non-root user, layered jar.
 
 # ---------- build ----------
-FROM eclipse-temurin:25.0.5_8-jdk-alpine-3.24 AS build
+FROM eclipse-temurin:27-jdk-alpine-3.24 AS build
 WORKDIR /workspace
 
 # Dependencies first (cached layer as long as pom.xml does not change)
@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -q package -DskipTests \
  && java -Djarmode=tools -jar target/catalog-service.jar extract --layers --launcher --destination target/extracted
 
 # ---------- runtime ----------
-FROM eclipse-temurin:25.0.5_8-jre-alpine-3.24
+FROM eclipse-temurin:27-jre-alpine-3.24
 
 LABEL org.opencontainers.image.title="catalog-service" \
       org.opencontainers.image.description="La Petite Maison de l'Épouvante - product catalog" \
