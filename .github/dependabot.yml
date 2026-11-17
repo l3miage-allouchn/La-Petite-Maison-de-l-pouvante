@@ -1,0 +1,13 @@
+# Dependabot — ecosystems are added as each service is created
+# (maven: phase 2, uv: phase 3, npm: phase 4, docker: phases 2-4).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
