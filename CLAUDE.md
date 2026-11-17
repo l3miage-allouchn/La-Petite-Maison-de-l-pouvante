@@ -52,5 +52,17 @@ gitleaks git -v    # scan de tout l'historique
 - Poste de dev : 5432 et 6379 déjà pris → `.env` local utilise 5433 / 6380.
 - macOS : `export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"` si credential helper introuvable.
 
+## catalog-service (phase 2)
+- Spring Boot 4.1.2, Java 25, package `fr.petitemaison.catalog` ; Jackson 3 (`tools.jackson.*`).
+- Boot 4 : annotations de test dans `org.springframework.boot.webmvc.test.autoconfigure` et
+  `org.springframework.boot.micrometer.metrics.test.autoconfigure` (`@AutoConfigureMetrics` pour /actuator/prometheus en test).
+- Profils : `local` (défaut, port 8081, logs texte), `docker` (hôtes Compose, logs JSON ECS), `test` (IT).
+- Tests : `*Test` = surefire (unitaires), `*IT` = failsafe (Testcontainers, mêmes images que Compose).
+  JaCoCo agrège les deux ; seuil 70 % lignes dans `mvn verify`.
+- Kafka : `delivery.timeout.ms >= linger.ms + request.timeout.ms` sinon le producteur ne se construit pas.
+- Publication asynchrone (`@Async`, threads virtuels) + préchauffage des métadonnées au démarrage.
+- Ids produits = slugs (`fig-orc-evil-ed`), validés par regex côté API et contrainte CHECK en base.
+- `make test-catalog` force Java 25 (`java_home -v 25` renvoie 27 en silence sur ce poste).
+
 ## Choix déjà actés
-Voir `docs/DECISIONS.md` (ADR-001 à ADR-008).
+Voir `docs/DECISIONS.md` (ADR-001 à ADR-011).

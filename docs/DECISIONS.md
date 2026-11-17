@@ -59,3 +59,24 @@ Format court : contexte → décision → conséquences. Statuts : *proposé*, *
 - **Contexte** : les ports d'infrastructure (5432, 6379…) peuvent déjà être pris sur un poste, et Kafbat UI n'a pas d'authentification.
 - **Décision** : tous les ports publiés sont liés à `127.0.0.1`. Les ports côté hôte sont surchargeables dans `.env` (`*_HOST_PORT`). Les conteneurs communiquent par le réseau dédié `pme-net`.
 - **Conséquences** : rien n'est exposé sur le réseau local. Un conflit de port se règle sans toucher au code.
+
+## ADR-009 — Publication de `product-viewed` asynchrone, au plus une fois côté HTTP
+
+- **Statut** : accepté (phase 2)
+- **Contexte** : la consultation d'une fiche produit ne doit jamais ralentir ni échouer à cause de Kafka.
+- **Décision** : l'événement est envoyé par une méthode `@Async`, sur des threads virtuels. Le producteur est idempotent (`acks=all`, `enable.idempotence=true`), le temps d'attente borné (`max.block.ms=10 s`) et les métadonnées préchargées au démarrage. Un échec incrémente `product_events_publish_failures_total` et est journalisé, sans donnée personnelle.
+- **Conséquences** : la page reste disponible si Kafka est en panne. En contrepartie, un événement peut être perdu, ce qui est acceptable pour des recommandations. Le motif *transactional outbox* est la cible si l'on a besoin de garanties plus fortes (commandes, paiements).
+
+## ADR-010 — Identifiants produits lisibles (slugs)
+
+- **Statut** : accepté (phase 2)
+- **Contexte** : les identifiants apparaissent dans les URL (`/produit/[id]`), les événements Kafka, les profils Valkey et les démos.
+- **Décision** : des slugs (`fig-orc-evil-ed`) validés par `^[a-z0-9][a-z0-9-]{0,63}$`, côté API comme en base (contrainte CHECK).
+- **Conséquences** : URL et événements restent lisibles pendant la soutenance, et la validation stricte bloque les entrées malveillantes. Il faudra gérer l'unicité des slugs lors de futures créations de produits (back-office, hors périmètre).
+
+## ADR-011 — Journalisation structurée et corrélation
+
+- **Statut** : accepté (phase 2)
+- **Contexte** : il faut suivre une requête du frontend jusqu'au consommateur Kafka dans Loki (phase 8).
+- **Décision** : logs JSON au format ECS (`logging.structured.format.console=ecs`). L'en-tête `X-Correlation-Id` est validé (sinon régénéré, contre l'injection de logs), placé dans le MDC, renvoyé dans la réponse et copié dans les headers Kafka (`correlation_id`). Le log par défaut de Spring Kafka, qui contient la charge utile complète, est désactivé.
+- **Conséquences** : une seule requête Loki suffit pour suivre un parcours. Aucun identifiant utilisateur n'apparaît dans les logs applicatifs.

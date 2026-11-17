@@ -85,13 +85,35 @@ curl -s http://localhost:8080/realms/petite-maison/protocol/openid-connect/token
   --data-urlencode "password=$KC_USER_NESRINE_PASSWORD" | jq -r .access_token
 ```
 
+## catalog-service (phase 2)
+
+Spring Boot 4.1 / Java 25, PostgreSQL (Flyway, 30 produits de démo), publication Kafka de `product-viewed`.
+
+```bash
+make test-catalog                     # tests unitaires + intégration Testcontainers + couverture ≥ 70 %
+make dev                              # construit l'image et démarre toute la stack
+curl -s "localhost:8081/api/catalog/products?category=FIGURINE&store=LYON&q=orc&page=0&size=12"
+curl -s -H "X-Session-Id: session-demo-0001" localhost:8081/api/catalog/products/fig-orc-evil-ed
+# → un événement apparaît dans Kafbat UI (topic catalog.product-viewed)
+```
+
+| Endpoint | Accès | Description |
+|---|---|---|
+| `GET /api/catalog/products?category=&q=&store=&page=&size=` | public | Liste paginée (`size` ≤ 50), triée par nom |
+| `GET /api/catalog/products/{id}` | public (JWT optionnel) | Détail + événement `product-viewed` (clé = `sub` du JWT, sinon `X-Session-Id`) |
+| `GET /actuator/health`, `/actuator/prometheus` | public | Santé (probes liveness/readiness), métriques (`products_viewed_total`…) |
+
+- Erreurs au format **RFC 9457** (`application/problem+json`), sans fuite d'information interne.
+- En-tête `X-Correlation-Id` accepté ou généré, renvoyé dans la réponse, présent dans les logs JSON et dans les headers Kafka.
+- Contrat de l'événement : [docs/events/product-viewed.schema.json](docs/events/product-viewed.schema.json).
+
 ## Feuille de route
 
 | Phase | Contenu | État |
 |---|---|---|
 | 0 | Initialisation, dépôt, pre-commit / Gitleaks | ✅ |
 | 1 | Infra locale Docker Compose (Postgres, Kafka, Valkey, Keycloak) | ✅ |
-| 2 | catalog-service (Spring Boot) | ⏳ |
+| 2 | catalog-service (Spring Boot) | ✅ |
 | 3 | reco-service (FastAPI) | ⏳ |
 | 4 | Frontend (Next.js) | ⏳ |
 | 5 | CI GitHub Actions (tests, Sonar, Trivy, SBOM, Cosign, ZAP) | ⏳ |
