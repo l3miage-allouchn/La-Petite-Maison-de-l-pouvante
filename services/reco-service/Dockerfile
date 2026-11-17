@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build with uv: locked dependencies only (uv.lock), slim runtime, non-root user.
 
-FROM ghcr.io/astral-sh/uv:0.13.8 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.9 AS uv
 
 # ---------- build ----------
 FROM python:3.14.9-slim-trixie AS build
