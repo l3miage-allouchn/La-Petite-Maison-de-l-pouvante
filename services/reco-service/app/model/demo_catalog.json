@@ -1,0 +1,182 @@
+[
+ {
+  "id": "goodies-affiche-suspiria",
+  "name": "Affiche Suspiria sérigraphiée",
+  "category": "GOODIES",
+  "universe": "giallo"
+ },
+ {
+  "id": "jeu-camp-sanglant",
+  "name": "Camp Sanglant — Jeu de cartes",
+  "category": "BOARD_GAME",
+  "universe": "slasher"
+ },
+ {
+  "id": "bd-dracula-integrale",
+  "name": "Dracula — Intégrale",
+  "category": "BD",
+  "universe": "gothique"
+ },
+ {
+  "id": "fanzine-hs-orc",
+  "name": "Fanzine Hors-série — Dans les coulisses de L'Orc",
+  "category": "FANZINE",
+  "universe": "heroic-fantasy"
+ },
+ {
+  "id": "fanzine-36-gothique",
+  "name": "Fanzine N°36 — Gothique et Hammer",
+  "category": "FANZINE",
+  "universe": "gothique"
+ },
+ {
+  "id": "fanzine-37-slasher",
+  "name": "Fanzine N°37 — Les slashers des années 80",
+  "category": "FANZINE",
+  "universe": "slasher"
+ },
+ {
+  "id": "fanzine-38-giallo",
+  "name": "Fanzine N°38 — Spécial Giallo",
+  "category": "FANZINE",
+  "universe": "giallo"
+ },
+ {
+  "id": "fig-orc-chaman-evil-ed",
+  "name": "Figurine Chaman orc — série L'Orc",
+  "category": "FIGURINE",
+  "universe": "heroic-fantasy"
+ },
+ {
+  "id": "fig-cthulhu-reveil",
+  "name": "Figurine Cthulhu — Le Réveil",
+  "category": "FIGURINE",
+  "universe": "lovecraftien"
+ },
+ {
+  "id": "fig-orc-evil-ed",
+  "name": "Figurine L'Orc — édition collector",
+  "category": "FIGURINE",
+  "universe": "heroic-fantasy"
+ },
+ {
+  "id": "fig-sorciere-blair",
+  "name": "Figurine La sorcière des bois",
+  "category": "FIGURINE",
+  "universe": "folk-horror"
+ },
+ {
+  "id": "fig-giallo-tueur-gants",
+  "name": "Figurine Le tueur aux gants noirs",
+  "category": "FIGURINE",
+  "universe": "giallo"
+ },
+ {
+  "id": "fig-nosferatu",
+  "name": "Figurine Nosferatu 1922",
+  "category": "FIGURINE",
+  "universe": "gothique"
+ },
+ {
+  "id": "fig-masque-hockey",
+  "name": "Figurine Tueur au masque de hockey",
+  "category": "FIGURINE",
+  "universe": "slasher"
+ },
+ {
+  "id": "jeu-horreur-arkham",
+  "name": "Horreur à Arkham — Jeu de plateau",
+  "category": "BOARD_GAME",
+  "universe": "lovecraftien"
+ },
+ {
+  "id": "bluray-orc-saison1",
+  "name": "L'Orc — Saison 1 — Blu-ray",
+  "category": "BLURAY",
+  "universe": "heroic-fantasy"
+ },
+ {
+  "id": "bd-orc-tome1",
+  "name": "L'Orc — Tome 1 : Le Sang des collines",
+  "category": "BD",
+  "universe": "heroic-fantasy"
+ },
+ {
+  "id": "bd-orc-tome2",
+  "name": "L'Orc — Tome 2 : La Horde",
+  "category": "BD",
+  "universe": "heroic-fantasy"
+ },
+ {
+  "id": "bluray-halloween-nuit",
+  "name": "La Nuit des masques — Blu-ray collector",
+  "category": "BLURAY",
+  "universe": "slasher"
+ },
+ {
+  "id": "bluray-wicker-man",
+  "name": "Le Dieu d'osier — Blu-ray",
+  "category": "BLURAY",
+  "universe": "folk-horror"
+ },
+ {
+  "id": "jeu-manoir-maudit",
+  "name": "Le Manoir maudit — Jeu de plateau",
+  "category": "BOARD_GAME",
+  "universe": "gothique"
+ },
+ {
+  "id": "bd-montagnes-hallucinations",
+  "name": "Les Montagnes hallucinées",
+  "category": "BD",
+  "universe": "lovecraftien"
+ },
+ {
+  "id": "bd-walking-morts",
+  "name": "Les Morts qui marchent — Tome 1",
+  "category": "BD",
+  "universe": "zombie"
+ },
+ {
+  "id": "goodies-mug-orc",
+  "name": "Mug L'Orc",
+  "category": "GOODIES",
+  "universe": "heroic-fantasy"
+ },
+ {
+  "id": "bluray-nosferatu-1922",
+  "name": "Nosferatu (1922) — Blu-ray",
+  "category": "BLURAY",
+  "universe": "gothique"
+ },
+ {
+  "id": "bluray-riflesso-coltello",
+  "name": "Riflesso di un coltello nella notte — Blu-ray restauré",
+  "category": "BLURAY",
+  "universe": "giallo"
+ },
+ {
+  "id": "bluray-suspiria-4k",
+  "name": "Suspiria — 4K Ultra HD",
+  "category": "BLURAY",
+  "universe": "giallo"
+ },
+ {
+  "id": "goodies-tshirt-maison",
+  "name": "T-shirt La Petite Maison de l'Épouvante",
+  "category": "GOODIES",
+  "universe": "gothique"
+ },
+ {
+  "id": "goodies-tote-necronomicon",
+  "name": "Tote bag Necronomicon",
+  "category": "GOODIES",
+  "universe": "lovecraftien"
+ },
+ {
+  "id": "bluray-zombie-aube",
+  "name": "Zombie : l'aube des morts — Blu-ray",
+  "category": "BLURAY",
+  "universe": "zombie"
+ }
+]
