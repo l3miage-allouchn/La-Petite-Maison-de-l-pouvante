@@ -107,6 +107,30 @@ curl -s -H "X-Session-Id: session-demo-0001" localhost:8081/api/catalog/products
 - En-tête `X-Correlation-Id` accepté ou généré, renvoyé dans la réponse, présent dans les logs JSON et dans les headers Kafka.
 - Contrat de l'événement : [docs/events/product-viewed.schema.json](docs/events/product-viewed.schema.json).
 
+## reco-service (phase 3)
+
+Python 3.14 / FastAPI, consommateur Kafka asynchrone (aiokafka), profils dans Valkey.
+
+```bash
+make test-reco                        # ruff + mypy + pytest (unitaires + Testcontainers) + couverture ≥ 70 %
+make reco-offline ARGS="--evaluate"   # modèle hors-ligne sur les événements de démo (HitRate@k, MRR@k)
+make reco-replay                      # rejoue tout l'historique Kafka pour reconstruire les profils
+curl -s "localhost:8082/api/reco/products/fig-nosferatu/similar?limit=4"
+curl -s -H "Authorization: Bearer $TOKEN" "localhost:8082/api/reco/recommendations/<sub>?limit=4"
+```
+
+| Endpoint | Accès | Description |
+|---|---|---|
+| `GET /api/reco/recommendations/{user_id}?limit=4` | JWT, **uniquement ses propres** recommandations (403 sinon) | Recommandations personnalisées (populaires si aucun historique) |
+| `GET /api/reco/products/{product_id}/similar?limit=4` | public | « Vous aimerez aussi » |
+| `GET /health`, `GET /metrics` | public | Santé (Valkey, consommateur), métriques Prometheus |
+| `GET /api/reco/docs` | public | Documentation OpenAPI |
+
+- Consommation *at-least-once* : commit après traitement, dédoublonnage par `event_id`, messages invalides → topic
+  `catalog.product-viewed.dlq` (avec en-têtes `dlq_reason` / `dlq_source`), erreurs transitoires → nouvel essai.
+- Le modèle est isolé derrière l'interface `Recommender` : voir [services/reco-service/app/model/README.md](services/reco-service/app/model/README.md).
+- Le `correlation_id` est repris des en-têtes Kafka : une même requête est traçable du catalogue jusqu'à la reco.
+
 ## Feuille de route
 
 | Phase | Contenu | État |
@@ -114,7 +138,7 @@ curl -s -H "X-Session-Id: session-demo-0001" localhost:8081/api/catalog/products
 | 0 | Initialisation, dépôt, pre-commit / Gitleaks | ✅ |
 | 1 | Infra locale Docker Compose (Postgres, Kafka, Valkey, Keycloak) | ✅ |
 | 2 | catalog-service (Spring Boot) | ✅ |
-| 3 | reco-service (FastAPI) | ⏳ |
+| 3 | reco-service (FastAPI) | ✅ |
 | 4 | Frontend (Next.js) | ⏳ |
 | 5 | CI GitHub Actions (tests, Sonar, Trivy, SBOM, Cosign, ZAP) | ⏳ |
 | 6 | Cluster Kind + plateforme GitOps (ArgoCD) | ⏳ |

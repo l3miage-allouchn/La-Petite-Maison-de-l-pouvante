@@ -80,3 +80,24 @@ Format court : contexte → décision → conséquences. Statuts : *proposé*, *
 - **Contexte** : il faut suivre une requête du frontend jusqu'au consommateur Kafka dans Loki (phase 8).
 - **Décision** : logs JSON au format ECS (`logging.structured.format.console=ecs`). L'en-tête `X-Correlation-Id` est validé (sinon régénéré, contre l'injection de logs), placé dans le MDC, renvoyé dans la réponse et copié dans les headers Kafka (`correlation_id`). Le log par défaut de Spring Kafka, qui contient la charge utile complète, est désactivé.
 - **Conséquences** : une seule requête Loki suffit pour suivre un parcours. Aucun identifiant utilisateur n'apparaît dans les logs applicatifs.
+
+## ADR-012 — Modèle de recommandation isolé derrière une interface et un registre
+
+- **Statut** : accepté (phase 3)
+- **Contexte** : la data scientist doit pouvoir remplacer l'algorithme sans toucher au consommateur, à l'API ni à la sécurité.
+- **Décision** : une interface abstraite `Recommender` (`update`, `recommend`, `similar`), un registre choisi par la variable `RECO_MODEL`, et un `FeatureStore` en deux implémentations (Valkey et mémoire). Un bac à sable hors-ligne (`app/model/offline.py`) mesure HitRate@k et MRR@k sur un jeu d'événements de démo.
+- **Conséquences** : le modèle s'expérimente sans Docker, et changer de modèle revient à changer une variable d'environnement. Le modèle de base (co-occurrence et affinité, pondérées par la récence) sert de référence chiffrée : HitRate@4 = 0,50.
+
+## ADR-013 — Synchronisation périodique du catalogue dans reco-service
+
+- **Statut** : accepté (phase 3)
+- **Contexte** : à partir des seuls événements, un produit jamais consulté ne peut jamais être recommandé (démarrage à froid côté produit).
+- **Décision** : reco-service importe le catalogue (`GET /api/catalog/products`, paginé) au démarrage puis toutes les 10 minutes. Chaque produit est enregistré avec une popularité de 0. Un échec n'empêche ni le démarrage ni le service.
+- **Conséquences** : tous les produits peuvent être recommandés via l'affinité de catégorie ou d'univers. Cela crée une dépendance réseau faible reco → catalogue, à autoriser explicitement dans les NetworkPolicy (phase 7).
+
+## ADR-014 — Sémantique de consommation : au moins une fois, DLQ, dédoublonnage
+
+- **Statut** : accepté (phase 3)
+- **Contexte** : il ne faut ni perdre d'événements ni bloquer le flux sur un message corrompu.
+- **Décision** : commit manuel des offsets après traitement. Un message invalide (JSON ou schéma) part dans `catalog.product-viewed.dlq` avec ses en-têtes d'origine, plus `dlq_reason` et `dlq_source`. Une erreur transitoire (Valkey indisponible) déclenche des nouvelles tentatives avec backoff, sans commit. Le dédoublonnage par `event_id` (TTL 24 h) n'est marqué qu'une fois le traitement réussi.
+- **Conséquences** : pas de perte en cas de panne de Valkey, puisque le lag Kafka absorbe le retard (alerte prévue en phase 8). Un rejeu complet reste possible (`make reco-replay`) grâce à la rétention Kafka. C'est l'un des arguments de la comparaison Kafka/RabbitMQ (phase 9).

@@ -64,5 +64,18 @@ gitleaks git -v    # scan de tout l'historique
 - Ids produits = slugs (`fig-orc-evil-ed`), validés par regex côté API et contrainte CHECK en base.
 - `make test-catalog` force Java 25 (`java_home -v 25` renvoie 27 en silence sur ce poste).
 
+## reco-service (phase 3)
+- Python 3.14, uv (`uv.lock` commité, `uv sync --frozen` dans l'image), FastAPI lancé en factory :
+  `uvicorn app.main:create_app --factory`. Image `python:3.14.9-slim-trixie` + `ghcr.io/astral-sh/uv:0.13.8`.
+- Couches : `app/model/` (binôme, interface `Recommender`), `app/store/` (FeatureStore Valkey + mémoire),
+  `consumer.py` (aiokafka), `api/routes.py`, `catalog_sync.py` (import périodique du catalogue).
+- Dédoublonnage : `is_event_seen` avant, `mark_event_seen` **après** `update()` (sinon un échec transitoire
+  serait pris pour un doublon et l'événement perdu).
+- Tests : `tests/unit` (store mémoire, JWT signés par une clé RSA de test) et `tests/integration`
+  (marqueur `integration`, Kafka `apache/kafka:4.4.0` en conteneur générique avec listener interne `BROKER`
+  pour la CLI, car le module Kafka de testcontainers-python ne supporte que les images Confluent).
+- Audience JWT `catalog-api` (même audience que le catalogue, ajoutée par le mapper du client `frontend`).
+- `make reco-replay` : stop → suppression `reco:*` → reset offsets → restart.
+
 ## Choix déjà actés
-Voir `docs/DECISIONS.md` (ADR-001 à ADR-011).
+Voir `docs/DECISIONS.md` (ADR-001 à ADR-014).
