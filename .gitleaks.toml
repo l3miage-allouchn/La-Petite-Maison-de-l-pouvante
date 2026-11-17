@@ -1,0 +1,15 @@
+# Gitleaks configuration — extends the built-in ruleset.
+# Used by the pre-commit hook and by CI (phase 5).
+title = "petite-maison-epouvante"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Template files containing only placeholders"
+paths = [
+  '''^\.env\.example$''',
+]
+regexes = [
+  '''change-me''',
+]

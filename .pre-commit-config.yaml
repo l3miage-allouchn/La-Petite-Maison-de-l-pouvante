@@ -1,0 +1,24 @@
+# pre-commit hooks — install once with: pre-commit install
+# Revisions are frozen to full commit SHAs (supply-chain hardening).
+# Update with: pre-commit autoupdate --freeze
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e  # frozen: v8.30.1
+    hooks:
+      - id: gitleaks-system  # uses the local gitleaks binary (brew install gitleaks)
+        pass_filenames: false  # upstream hook definition omits it
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
