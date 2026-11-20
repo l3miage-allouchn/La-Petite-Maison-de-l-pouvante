@@ -16,12 +16,12 @@ define todo
 	@echo "⏳ '$@' : à venir en $(1)."
 endef
 
-.PHONY: help env bootstrap check-env infra infra-down status logs kafka-demo-event test-catalog test-reco reco-offline reco-replay dev dev-down dev-reset test \
+.PHONY: help env bootstrap check-env infra infra-down status logs kafka-demo-event test-catalog test-reco test-frontend test-e2e reco-offline reco-replay dev dev-down dev-reset test \
         cluster platform secrets up down demo-broker
 
 help: ## Affiche cette aide
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 env: ## Génère .env avec des secrets aléatoires (ne l'écrase jamais)
 	@./scripts/gen-env.sh
@@ -59,7 +59,7 @@ logs: ## Suit les logs (S=service pour filtrer)
 kafka-demo-event: ## Publie un événement product-viewed de test dans Kafka
 	@./infra/local/kafka/produce-demo-event.sh
 
-test: test-catalog test-reco ## Lance les tests de tous les services
+test: test-catalog test-reco test-frontend ## Lance les tests de tous les services
 
 test-catalog: ## catalog-service : tests unitaires + intégration (Testcontainers) + couverture
 	cd services/catalog-service && JAVA_HOME=$(JAVA25_HOME) ./mvnw -B verify
@@ -67,6 +67,13 @@ test-catalog: ## catalog-service : tests unitaires + intégration (Testcontainer
 test-reco: ## reco-service : ruff + mypy + pytest (unitaires + Testcontainers) + couverture
 	cd services/reco-service && uv run ruff check . && uv run ruff format --check . && uv run mypy \
 		&& uv run pytest --cov --cov-report=term --cov-report=xml
+
+test-frontend: ## frontend : eslint + tsc + vitest (couverture)
+	cd services/frontend && npm ci --no-audit --no-fund && npm run lint && npm run typecheck && npm test
+
+test-e2e: check-env ## frontend : Playwright + axe contre la stack lancée (make dev)
+	cd services/frontend && set -a && . ../../.env && set +a \
+		&& E2E_PASSWORD="$$KC_USER_NESRINE_PASSWORD" npx playwright test
 
 reco-offline: ## Modèle de reco hors-ligne sur les événements de démo (ARGS="--evaluate")
 	cd services/reco-service && uv run python -m app.model.offline $(ARGS)

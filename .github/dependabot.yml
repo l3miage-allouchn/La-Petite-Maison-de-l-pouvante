@@ -46,3 +46,24 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+
+  - package-ecosystem: npm
+    directory: /services/frontend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      next:
+        patterns: ["next", "eslint-config-next", "react", "react-dom", "@types/react*"]
+      test:
+        patterns: ["vitest", "@vitest/*", "@testing-library/*", "@playwright/test", "@axe-core/*", "jsdom"]
+
+  - package-ecosystem: docker
+    directory: /services/frontend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
