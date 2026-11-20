@@ -77,5 +77,17 @@ gitleaks git -v    # scan de tout l'historique
 - Audience JWT `catalog-api` (même audience que le catalogue, ajoutée par le mapper du client `frontend`).
 - `make reco-replay` : stop → suppression `reco:*` → reset offsets → restart.
 
+## frontend (phase 4)
+- Next.js 16.4.6 (App Router, `src/proxy.ts` remplace middleware), React 19.3, Auth.js `next-auth@5.0.0-beta.32`.
+  Image `node:24.22.3-alpine3.24`, sortie standalone, UID 10001.
+- Jetons uniquement côté serveur (`getToken`), session client = `sub`. Endpoints Keycloak explicites :
+  auth sur l'issuer public, token/userinfo/refresh sur `KEYCLOAK_INTERNAL_ISSUER` (ADR-016).
+- CSP nonce par requête ; `form-action` doit contenir l'origine Keycloak.
+- `productIndex` utilise la liste (jamais le détail, qui publierait de fausses vues).
+- Accueil/reco : une API en panne vide le bloc, ne renvoie jamais 500.
+- Tests : `make test-frontend` (vitest), `make test-e2e` (Playwright + axe, stack lancée, `workers: 1`).
+- Couleur des liens `#EC6A7F` : `#B3122E` ne passe pas le contraste AA sur fond sombre.
+- Healthcheck catalog : start-period 120 s (JVM lente quand les builds tournent en parallèle).
+
 ## Choix déjà actés
-Voir `docs/DECISIONS.md` (ADR-001 à ADR-014).
+Voir `docs/DECISIONS.md` (ADR-001 à ADR-018).

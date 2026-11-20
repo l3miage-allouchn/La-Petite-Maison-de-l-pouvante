@@ -101,3 +101,31 @@ Format court : contexte → décision → conséquences. Statuts : *proposé*, *
 - **Contexte** : il ne faut ni perdre d'événements ni bloquer le flux sur un message corrompu.
 - **Décision** : commit manuel des offsets après traitement. Un message invalide (JSON ou schéma) part dans `catalog.product-viewed.dlq` avec ses en-têtes d'origine, plus `dlq_reason` et `dlq_source`. Une erreur transitoire (Valkey indisponible) déclenche des nouvelles tentatives avec backoff, sans commit. Le dédoublonnage par `event_id` (TTL 24 h) n'est marqué qu'une fois le traitement réussi.
 - **Conséquences** : pas de perte en cas de panne de Valkey, puisque le lag Kafka absorbe le retard (alerte prévue en phase 8). Un rejeu complet reste possible (`make reco-replay`) grâce à la rétention Kafka. C'est l'un des arguments de la comparaison Kafka/RabbitMQ (phase 9).
+
+## ADR-015 — Frontend : jetons côté serveur uniquement (Auth.js v5)
+
+- **Statut** : accepté (phase 4)
+- **Contexte** : un jeton d'accès exposé au JavaScript du navigateur peut être volé par une faille XSS.
+- **Décision** : Next.js rend les pages côté serveur et appelle lui-même catalog-service et reco-service. Auth.js v5 (`next-auth@5.0.0-beta.32`, seule version compatible Next 16 ; la v4 n'est plus maintenue) conserve les jetons dans un cookie de session chiffré, HttpOnly. La session exposée au client ne contient que le `sub`. Le rafraîchissement du jeton est fait côté serveur.
+- **Conséquences** : aucun jeton dans le navigateur, aucun CORS à ouvrir sur les API. Dépendance à une version bêta, épinglée exactement et suivie par Dependabot.
+
+## ADR-016 — Endpoints Keycloak explicites (pas de découverte OIDC)
+
+- **Statut** : accepté (phase 4)
+- **Contexte** : sous Compose, le navigateur joint Keycloak via `localhost:8080` tandis que le conteneur frontend le joint via `keycloak:8080` (voir ADR-005). La découverte OIDC renverrait des URL inaccessibles pour l'un ou l'autre.
+- **Décision** : l'URL d'autorisation utilise l'issuer public ; les URL de jeton, userinfo et de rafraîchissement utilisent l'issuer interne. L'issuer attendu dans les jetons reste l'URL publique.
+- **Conséquences** : fonctionne sans bricolage DNS sous Compose. En Kubernetes (phase 7), les deux variables pointeront vers `https://auth.localhost` (ou le service interne pour le backchannel).
+
+## ADR-017 — CSP stricte avec nonce, styles en `unsafe-inline`
+
+- **Statut** : accepté (phase 4)
+- **Contexte** : la CSP est la principale défense contre le XSS ; Next.js injecte des scripts inline.
+- **Décision** : nonce aléatoire par requête (généré dans `proxy.ts`) pour `script-src` avec `strict-dynamic` ; `form-action` limité à `'self'` et à l'origine Keycloak (les navigateurs appliquent `form-action` aux redirections du formulaire de connexion) ; `frame-ancestors 'none'`. `style-src` garde `'unsafe-inline'` (styles injectés par Next/next-font), risque faible sans exécution de script.
+- **Conséquences** : pages rendues dynamiquement (pas de cache statique), acceptable pour la démo. Le scan ZAP (phase 5) vérifiera les en-têtes.
+
+## ADR-018 — Tests de bout en bout sur la stack réelle, un seul worker
+
+- **Statut** : accepté (phase 4)
+- **Contexte** : le parcours démontré traverse Keycloak, le catalogue, Kafka et la reco ; des tests avec mocks ne le prouveraient pas.
+- **Décision** : Playwright cible la stack Compose lancée (`make test-e2e`) ; le mot de passe de l'utilisateur de test vient de `.env`. Les tests tournent sur un seul worker : une seule stack partagée sur un poste de 16 Go, et Keycloak en mode dev compile son thème à la première connexion. axe-core sert d'indicateur RGAA automatisé (WCAG 2.1 A/AA).
+- **Conséquences** : environ 25 s pour 12 tests, déterministes. En CI (phase 5), la même suite tournera contre la stack démarrée dans le runner.

@@ -131,6 +131,33 @@ curl -s -H "Authorization: Bearer $TOKEN" "localhost:8082/api/reco/recommendatio
 - Le modèle est isolé derrière l'interface `Recommender` : voir [services/reco-service/app/model/README.md](services/reco-service/app/model/README.md).
 - Le `correlation_id` est repris des en-têtes Kafka : une même requête est traçable du catalogue jusqu'à la reco.
 
+## Frontend (phase 4)
+
+Next.js 16 (App Router, rendu serveur) / React 19, authentification Auth.js v5 + Keycloak.
+
+```bash
+make test-frontend                    # eslint + tsc + vitest (couverture ≥ 70 %)
+make dev                              # puis http://localhost:3000
+make test-e2e                         # Playwright + axe contre la stack lancée (mot de passe lu dans .env)
+```
+
+| Page | Contenu |
+|---|---|
+| `/` | Accueil : nouveautés, « Recommandé pour vous » (connecté), bandeau festival |
+| `/boutique` | Catalogue filtrable (catégorie, magasin, recherche), pagination — fonctionne sans JavaScript |
+| `/produit/{id}` | Fiche produit (publie l'événement `product-viewed`) + « Vous aimerez aussi » |
+| `/accessibilite` | Déclaration d'accessibilité |
+
+- **Connexion** : Authorization Code + PKCE (S256), `state` et `nonce` vérifiés, client confidentiel. Les jetons
+  restent côté serveur, dans le cookie de session chiffré : le navigateur n'appelle jamais les API directement.
+  La déconnexion ferme aussi la session Keycloak (SSO).
+- **Recommandations** : connecté → `/recommendations/{sub}` ; anonyme → produits similaires. Un service en panne
+  vide le bloc concerné sans casser la page.
+- **Sécurité** : CSP avec nonce par requête, HSTS, `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`,
+  `Permissions-Policy`, polices auto-hébergées (aucun appel tiers depuis le navigateur). Conteneur non root (UID 10001).
+- **Accessibilité (RGAA)** : `lang="fr"`, lien d'évitement, focus visible, formulaires étiquetés, contrastes AA ;
+  audit axe (WCAG 2.1 A/AA) sur 6 pages, zéro violation sérieuse ou critique exigée.
+
 ## Feuille de route
 
 | Phase | Contenu | État |
@@ -139,7 +166,7 @@ curl -s -H "Authorization: Bearer $TOKEN" "localhost:8082/api/reco/recommendatio
 | 1 | Infra locale Docker Compose (Postgres, Kafka, Valkey, Keycloak) | ✅ |
 | 2 | catalog-service (Spring Boot) | ✅ |
 | 3 | reco-service (FastAPI) | ✅ |
-| 4 | Frontend (Next.js) | ⏳ |
+| 4 | Frontend (Next.js) | ✅ |
 | 5 | CI GitHub Actions (tests, Sonar, Trivy, SBOM, Cosign, ZAP) | ⏳ |
 | 6 | Cluster Kind + plateforme GitOps (ArgoCD) | ⏳ |
 | 7 | Déploiement des services + Kyverno | ⏳ |
