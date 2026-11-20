@@ -2,7 +2,7 @@
 # Next.js standalone output: only the server bundle and its traced dependencies, non-root user.
 
 # ---------- dependencies ----------
-FROM node:24.22.3-alpine3.24 AS deps
+FROM node:26.13.1-alpine3.24 AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
@@ -15,7 +15,7 @@ COPY . .
 RUN npm run build
 
 # ---------- runtime ----------
-FROM node:24.22.3-alpine3.24
+FROM node:26.13.1-alpine3.24
 
 LABEL org.opencontainers.image.title="frontend" \
       org.opencontainers.image.description="La Petite Maison de l'Épouvante - storefront" \
