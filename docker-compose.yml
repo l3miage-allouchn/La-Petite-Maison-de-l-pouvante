@@ -1,6 +1,5 @@
 # Full local stack: infrastructure + application services.
 # Usage: make dev
-# frontend (phase 4) will be added here.
 name: petite-maison
 
 include:
@@ -64,6 +63,38 @@ services:
     deploy:
       resources:
         limits: { memory: 256m, cpus: "0.5" }
+    networks: [pme-net]
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  frontend:
+    build:
+      context: services/frontend
+    image: petite-maison/frontend:local
+    restart: unless-stopped
+    depends_on:
+      catalog-service: { condition: service_healthy }
+      reco-service: { condition: service_healthy }
+      keycloak: { condition: service_healthy }
+    environment:
+      AUTH_SECRET: ${AUTH_SECRET:?set in .env}
+      AUTH_URL: ${KC_FRONTEND_URL:-http://localhost:3000}
+      AUTH_KEYCLOAK_ID: frontend
+      AUTH_KEYCLOAK_SECRET: ${KC_FRONTEND_CLIENT_SECRET:?set in .env}
+      # Browser-facing issuer vs. server-side URL of the same realm (ADR-005)
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/petite-maison
+      KEYCLOAK_INTERNAL_ISSUER: http://keycloak:8080/realms/petite-maison
+      CATALOG_API_URL: http://catalog-service:8080
+      RECO_API_URL: http://reco-service:8080
+    ports: ["127.0.0.1:${FRONTEND_HOST_PORT:-3000}:3000"]
+    read_only: true
+    tmpfs: [/tmp, /app/.next/cache]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits: { memory: 384m, cpus: "1.0" }
     networks: [pme-net]
     logging:
       driver: json-file
